@@ -1,0 +1,1541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HabitFlow — Build Better Days</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Clash+Display:wght@400;500;600;700&family=Cabinet+Grotesk:wght@300;400;500;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ============================================================
+       RESET & VARIABLES
+    ============================================================ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      /* backgrounds */
+      --bg:      #05050a;
+      --surface: #0f0f1a;
+      --card:    #161625;
+
+      /* borders */
+      --border:  rgba(255, 255, 255, 0.06);
+      --border2: rgba(255, 255, 255, 0.12);
+
+      /* text */
+      --text:   #f4f4ff;
+      --muted:  #6b6b8f;
+      --muted2: #9898b8;
+
+      /* accent colors + backgrounds */
+      --green:    #00f5a0;
+      --green-bg: rgba(0, 245, 160, 0.08);
+      --blue:     #4d9fff;
+      --blue-bg:  rgba(77, 159, 255, 0.08);
+      --orange:   #ff7043;
+      --orange-bg: rgba(255, 112, 67, 0.08);
+      --purple:   #c77dff;
+      --purple-bg: rgba(199, 125, 255, 0.08);
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ============================================================
+       BACKGROUND DECORATIONS (grid + floating blobs)
+    ============================================================ */
+
+    /* subtle dot-grid overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* big blurry color blobs that drift slowly */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(140px);
+      pointer-events: none;
+      z-index: 0;
+      animation: blobDrift 20s ease-in-out infinite alternate;
+    }
+
+    .blob-green {
+      width: 600px;
+      height: 600px;
+      background: rgba(0, 245, 160, 0.04);
+      top: -200px;
+      left: -200px;
+    }
+
+    .blob-orange {
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 112, 67, 0.05);
+      bottom: -150px;
+      right: -150px;
+      animation-duration: 16s;
+      animation-direction: alternate-reverse;
+    }
+
+    .blob-blue {
+      width: 400px;
+      height: 400px;
+      background: rgba(77, 159, 255, 0.04);
+      top: 40%;
+      left: 50%;
+      animation-duration: 22s;
+    }
+
+    @keyframes blobDrift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(80px, 50px) scale(1.2); }
+    }
+
+    /* ============================================================
+       LAYOUT WRAPPER
+    ============================================================ */
+    .app {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 40px 24px 100px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+       NAVIGATION BAR
+    ============================================================ */
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 60px;
+    }
+
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      box-shadow: 0 0 30px rgba(0, 245, 160, 0.2);
+    }
+
+    .brand-name {
+      font-family: 'Clash Display', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    /* the "Flow" part gets a gradient */
+    .brand-name em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .nav-date {
+      font-size: 13px;
+      color: var(--muted);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 8px 18px;
+    }
+
+    /* ============================================================
+       HERO SECTION
+    ============================================================ */
+    .hero {
+      text-align: center;
+      margin-bottom: 64px;
+    }
+
+    /* small pill above the heading */
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 7px 16px;
+      font-size: 12px;
+      color: var(--muted2);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    /* animated green dot inside the pill */
+    .hero-eyebrow .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .hero h1 {
+      font-family: 'Clash Display', sans-serif;
+      font-size: clamp(42px, 7vw, 72px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 20px;
+    }
+
+    /* second line of heading — gradient text */
+    .hero h1 .gradient-line {
+      display: block;
+      background: linear-gradient(135deg, var(--green) 0%, var(--blue) 50%, var(--purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--muted2);
+      max-width: 480px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+      font-weight: 300;
+    }
+
+    /* quote block with left accent border */
+    .hero-quote {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--orange);
+      border-radius: 0 14px 14px 0;
+      padding: 14px 20px;
+      font-size: 14px;
+      color: var(--muted2);
+      font-style: italic;
+      max-width: 520px;
+      line-height: 1.6;
+    }
+
+    /* ============================================================
+       STATS ROW
+    ============================================================ */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, transform 0.3s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border2);
+      transform: translateY(-2px);
+    }
+
+    /* thin colored top stripe — each card gets a different color */
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+    }
+
+    .stat-card:nth-child(1)::before { background: var(--green); }
+    .stat-card:nth-child(2)::before { background: var(--blue); }
+    .stat-card:nth-child(3)::before { background: var(--orange); }
+    .stat-card:nth-child(4)::before { background: var(--purple); }
+
+    .stat-card .icon {
+      font-size: 22px;
+      margin-bottom: 14px;
+    }
+
+    .stat-card .value {
+      font-family: 'Clash Display', sans-serif;
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: -1.5px;
+      margin-bottom: 4px;
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* color helpers */
+    .color-green  { color: var(--green); }
+    .color-blue   { color: var(--blue); }
+    .color-orange { color: var(--orange); }
+    .color-purple { color: var(--purple); }
+
+    /* ============================================================
+       ADD HABIT FORM
+    ============================================================ */
+    .add-section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      margin-bottom: 28px;
+    }
+
+    .form-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    /* wrapper so we can position the pencil icon */
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper .pencil-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    .habit-input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 15px;
+      padding: 14px 18px 14px 46px;
+      border-radius: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .habit-input:focus {
+      border-color: var(--green);
+      box-shadow: 0 0 0 3px rgba(0, 245, 160, 0.1);
+    }
+
+    .habit-input::placeholder {
+      color: var(--muted);
+    }
+
+    /* category selection pills */
+    .category-pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .category-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-pill:hover {
+      border-color: var(--border2);
+      color: var(--text);
+    }
+
+    /* active states for each category */
+    .category-pill.active-health  { border-color: var(--green);  background: var(--green-bg);  color: var(--green); }
+    .category-pill.active-study   { border-color: var(--blue);   background: var(--blue-bg);   color: var(--blue); }
+    .category-pill.active-fitness { border-color: var(--orange); background: var(--orange-bg); color: var(--orange); }
+    .category-pill.active-other   { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); }
+
+    .add-button {
+      background: linear-gradient(135deg, var(--green), var(--blue));
+      border: none;
+      border-radius: 14px;
+      padding: 14px 28px;
+      color: #000;
+      font-family: 'Clash Display', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      white-space: nowrap;
+    }
+
+    .add-button:hover  { opacity: 0.9; transform: translateY(-1px); }
+    .add-button:active { transform: scale(0.97); }
+
+    /* ============================================================
+       TABS
+    ============================================================ */
+    .tab-bar {
+      display: flex;
+      gap: 2px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 11px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Cabinet Grotesk', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    /* ============================================================
+       PANELS (each tab's content)
+    ============================================================ */
+    .tab-panel {
+      display: none;
+    }
+
+    .tab-panel.active {
+      display: block;
+      animation: slideUp 0.3s ease;
+    }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ============================================================
+       HABIT CARDS
+    ============================================================ */
+
+    /* category section header */
+    .category-heading {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--muted);
+      margin: 28px 0 14px;
+      padding-left: 4px;
+    }
+
+    .habit-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 20px 22px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* colored left accent bar — hidden until marked done */
+    .habit-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .habit-card.completed::before { opacity: 1; }
+
+    .habit-card.completed {
+      border-color: rgba(0, 245, 160, 0.15);
+      background: rgba(0, 245, 160, 0.03);
+    }
+
+    .habit-card:hover {
+      border-color: var(--border2);
+      transform: translateX(3px);
+    }
+
+    /* each category gets its own accent color */
+    .habit-card.cat-health::before  { background: var(--green); }
+    .habit-card.cat-study::before   { background: var(--blue); }
+    .habit-card.cat-fitness::before { background: var(--orange); }
+    .habit-card.cat-other::before   { background: var(--purple); }
+
+    /* the circular check button */
+    .check-button {
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      border: 2px solid var(--border2);
+      background: transparent;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      font-size: 0;
+      transition: all 0.25s;
+      position: relative;
+    }
+
+    /* inner dot — shows on hover */
+    .check-button::after {
+      content: '';
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--muted);
+      opacity: 0;
+      transition: all 0.25s;
+    }
+
+    .check-button:hover::after { opacity: 0.4; }
+    .check-button:hover { border-color: var(--green); }
+
+    /* checked state */
+    .check-button.checked {
+      background: var(--green);
+      border-color: var(--green);
+      box-shadow: 0 0 20px rgba(0, 245, 160, 0.3);
+    }
+
+    .check-button.checked::after {
+      content: '✓';
+      font-size: 18px;
+      color: #000;
+      opacity: 1;
+      background: transparent;
+      font-weight: 700;
+      font-family: 'Clash Display', sans-serif;
+    }
+
+    /* habit name + meta info */
+    .habit-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .habit-name {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .habit-meta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* category tag pill */
+    .category-tag {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 10px;
+      border-radius: 100px;
+    }
+
+    .tag-health  { background: var(--green-bg);  color: var(--green); }
+    .tag-study   { background: var(--blue-bg);   color: var(--blue); }
+    .tag-fitness { background: var(--orange-bg); color: var(--orange); }
+    .tag-other   { background: var(--purple-bg); color: var(--purple); }
+
+    /* streak counter */
+    .streak-info {
+      font-size: 12px;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .streak-info.on-fire {
+      color: var(--orange);
+      font-weight: 600;
+    }
+
+    /* 7 little dots representing the last 7 days */
+    .streak-dots {
+      display: flex;
+      gap: 3px;
+      align-items: center;
+    }
+
+    .streak-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--border2);
+    }
+
+    .streak-dot.filled {
+      background: var(--orange);
+    }
+
+    /* delete button — right side of card */
+    .habit-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 18px;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+
+    .delete-btn:hover {
+      color: #ff4d4d;
+      background: rgba(255, 77, 77, 0.1);
+    }
+
+    /* empty state when no habits exist */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .empty-state p {
+      font-size: 15px;
+    }
+
+    /* ============================================================
+       WEEKLY VIEW
+    ============================================================ */
+    .weekly-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      overflow: hidden;
+    }
+
+    /* header row with day labels */
+    .weekly-header {
+      display: grid;
+      grid-template-columns: 1fr repeat(7, 40px);
+      gap: 0;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .weekly-header span {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    /* each habit row */
+    .weekly-row {
+      display: grid;
+      grid-template-columns: 1fr repeat(7, 40px);
+      gap: 0;
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      align-items: center;
+      transition: background 0.2s;
+    }
+
+    .weekly-row:last-child {
+      border-bottom: none;
+    }
+
+    .weekly-row:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .weekly-habit-name {
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding-right: 16px;
+    }
+
+    /* green dot if done, grey dot if not */
+    .day-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .day-dot.done { background: rgba(0, 245, 160, 0.2); color: var(--green); }
+    .day-dot.missed { background: var(--surface); color: var(--muted); font-size: 9px; }
+
+    /* completion percentage at the bottom */
+    .completion-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .completion-label h3 {
+      font-family: 'Clash Display', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--green);
+    }
+
+    .completion-label p {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .progress-bar-track {
+      flex: 1;
+      height: 8px;
+      background: var(--surface);
+      border-radius: 100px;
+      margin: 0 24px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--green), var(--blue));
+      transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ============================================================
+       REMINDERS VIEW
+    ============================================================ */
+    .reminder-group {
+      margin-bottom: 32px;
+    }
+
+    .reminder-group-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .reminder-group-header h3 {
+      font-family: 'Clash Display', sans-serif;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .count-pill {
+      padding: 3px 12px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .count-red   { background: rgba(255, 77, 77, 0.15); color: #ff6b6b; }
+    .count-green { background: var(--green-bg); color: var(--green); }
+
+    .reminder-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 18px 20px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: border-color 0.2s;
+    }
+
+    .reminder-card.pending:hover {
+      border-color: rgba(255, 112, 67, 0.3);
+    }
+
+    .reminder-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .icon-health  { background: var(--green-bg); }
+    .icon-study   { background: var(--blue-bg); }
+    .icon-fitness { background: var(--orange-bg); }
+    .icon-other   { background: var(--purple-bg); }
+
+    .reminder-name {
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .reminder-warning {
+      font-size: 12px;
+      color: var(--orange);
+      margin-top: 3px;
+    }
+
+    /* shown when everything is done for the day */
+    .all-done-banner {
+      background: var(--green-bg);
+      border: 1px solid rgba(0, 245, 160, 0.2);
+      border-radius: 18px;
+      padding: 36px;
+      text-align: center;
+    }
+
+    .all-done-banner .trophy {
+      font-size: 44px;
+      margin-bottom: 14px;
+    }
+
+    .all-done-banner p {
+      color: var(--green);
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    /* ============================================================
+       TOAST NOTIFICATION
+    ============================================================ */
+    .toast {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%) translateY(16px);
+      background: var(--card);
+      border: 1px solid var(--border2);
+      border-radius: 100px;
+      padding: 13px 28px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+      z-index: 999;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ============================================================
+       RESPONSIVE — stack on mobile
+    ============================================================ */
+    @media (max-width: 700px) {
+      .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .input-row {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .weekly-header,
+      .weekly-row {
+        grid-template-columns: 1fr repeat(7, 32px);
+        padding: 12px 16px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- background blobs -->
+  <div class="blob blob-green"></div>
+  <div class="blob blob-orange"></div>
+  <div class="blob blob-blue"></div>
+
+  <div class="app">
+
+    <!-- ── NAV ─────────────────────────────────────────────── -->
+    <nav>
+      <div class="nav-brand">
+        <div class="brand-icon">🔥</div>
+        <div class="brand-name">Habit<em>Flow</em></div>
+      </div>
+      <div class="nav-date" id="navDate"></div>
+    </nav>
+
+    <!-- ── HERO ────────────────────────────────────────────── -->
+    <div class="hero">
+      <div class="hero-eyebrow">
+        <span class="live-dot"></span>
+        Your daily dashboard
+      </div>
+
+      <h1>
+        Build habits that
+        <span class="gradient-line">actually stick.</span>
+      </h1>
+
+      <p class="hero-subtitle">
+        Track, streak, and ship your way to the life you want — one day at a time.
+      </p>
+
+      <div class="hero-quote" id="heroQuote"></div>
+    </div>
+
+    <!-- ── STATS ────────────────────────────────────────────── -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="icon">📋</div>
+        <div class="value color-green" id="statTotal">0</div>
+        <div class="label">Total Habits</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">✅</div>
+        <div class="value color-blue" id="statDone">0</div>
+        <div class="label">Done Today</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">🔥</div>
+        <div class="value color-orange" id="statStreak">0</div>
+        <div class="label">Best Streak</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">📅</div>
+        <div class="value color-purple" id="statWeek">0%</div>
+        <div class="label">This Week</div>
+      </div>
+    </div>
+
+    <!-- ── ADD HABIT ─────────────────────────────────────────── -->
+    <div class="add-section">
+      <div class="form-label">+ Add a new habit</div>
+
+      <div class="input-row">
+        <div class="input-wrapper">
+          <span class="pencil-icon">✏️</span>
+          <input
+            class="habit-input"
+            type="text"
+            id="habitInput"
+            placeholder="e.g. Read for 20 minutes, Drink 8 glasses of water…"
+            maxlength="60"
+          />
+        </div>
+        <button class="add-button" onclick="addHabit()">Add →</button>
+      </div>
+
+      <div class="category-pills">
+        <button class="category-pill active-health" data-cat="health" onclick="selectCategory(this)">🏃 Health</button>
+        <button class="category-pill" data-cat="study"   onclick="selectCategory(this)">📚 Study</button>
+        <button class="category-pill" data-cat="fitness" onclick="selectCategory(this)">💪 Fitness</button>
+        <button class="category-pill" data-cat="other"   onclick="selectCategory(this)">⭐ Other</button>
+      </div>
+    </div>
+
+    <!-- ── TABS ──────────────────────────────────────────────── -->
+    <div class="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('habits', this)">📋 Habits</button>
+      <button class="tab-btn"        onclick="switchTab('weekly', this)">📊 Weekly</button>
+      <button class="tab-btn"        onclick="switchTab('reminders', this)">⏰ Reminders</button>
+    </div>
+
+    <!-- ── HABITS PANEL ──────────────────────────────────────── -->
+    <div class="tab-panel active" id="panel-habits">
+      <div id="habitList"></div>
+    </div>
+
+    <!-- ── WEEKLY PANEL ──────────────────────────────────────── -->
+    <div class="tab-panel" id="panel-weekly">
+      <div class="weekly-container">
+        <div class="weekly-header" id="weeklyHeader"></div>
+        <div id="weeklyRows"></div>
+        <div class="completion-row">
+          <div class="completion-label">
+            <h3 id="completionPct">0%</h3>
+            <p>completion this week</p>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progressBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── REMINDERS PANEL ───────────────────────────────────── -->
+    <div class="tab-panel" id="panel-reminders">
+      <div class="reminder-group">
+        <div class="reminder-group-header">
+          <h3>Still to do</h3>
+          <span class="count-pill count-red" id="pendingCount">0</span>
+        </div>
+        <div id="pendingList"></div>
+      </div>
+
+      <div class="reminder-group">
+        <div class="reminder-group-header">
+          <h3>Completed today</h3>
+          <span class="count-pill count-green" id="doneCount">0</span>
+        </div>
+        <div id="doneList"></div>
+      </div>
+    </div>
+
+  </div><!-- /.app -->
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ──────────────────────────────────────────────────────────────
+    // DATA & CONFIG
+    // ──────────────────────────────────────────────────────────────
+
+    const STORAGE_KEY = 'habitflow_data';
+
+    const MOTIVATIONAL_QUOTES = [
+      "Small daily improvements lead to stunning results. 🚀",
+      "You don't have to be great to start, but you have to start to be great.",
+      "Discipline is choosing between what you want now and what you want most.",
+      "Every expert was once a beginner. Keep going!",
+      "Success is the sum of small efforts repeated day in and day out.",
+      "The best time to start was yesterday. The next best time is NOW.",
+      "Hack Club Horizons SF — you're going to make it! 🛫",
+      "35 hours of building → one ticket to San Francisco. Let's go. 💻",
+    ];
+
+    // metadata for each category
+    const CATEGORIES = {
+      health:  { label: '🏃 Health',  tagClass: 'tag-health',  iconClass: 'icon-health',  icon: '🏃' },
+      study:   { label: '📚 Study',   tagClass: 'tag-study',   iconClass: 'icon-study',   icon: '📚' },
+      fitness: { label: '💪 Fitness', tagClass: 'tag-fitness', iconClass: 'icon-fitness', icon: '💪' },
+      other:   { label: '⭐ Other',   tagClass: 'tag-other',   iconClass: 'icon-other',   icon: '⭐' },
+    };
+
+    // which category is currently selected in the form
+    let selectedCategory = 'health';
+
+    // ──────────────────────────────────────────────────────────────
+    // STORAGE HELPERS
+    // ──────────────────────────────────────────────────────────────
+
+    function loadData() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      } catch {
+        return {};
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // DATE HELPERS
+    // ──────────────────────────────────────────────────────────────
+
+    // returns today as "YYYY-MM-DD"
+    function getTodayString() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    // returns an array of the last 7 days as "YYYY-MM-DD" strings
+    function getLastSevenDays() {
+      return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() - (6 - i));
+        return d.toISOString().slice(0, 10);
+      });
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // STREAK CALCULATION
+    // ──────────────────────────────────────────────────────────────
+
+    // counts how many consecutive days (ending today) a habit was completed
+    function calculateStreak(completedDates) {
+      if (!completedDates.length) return 0;
+
+      // deduplicate and sort newest first
+      const sorted = [...new Set(completedDates)].sort().reverse();
+
+      let count = 0;
+      let checkDate = new Date();
+      checkDate.setHours(0, 0, 0, 0);
+
+      for (const dateStr of sorted) {
+        const date = new Date(dateStr + 'T12:00:00');
+        if (date.getTime() === checkDate.getTime()) {
+          count++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break; // gap found — streak ends here
+        }
+      }
+
+      return count;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // STREAK DOTS (7 small circles showing last 7 days)
+    // ──────────────────────────────────────────────────────────────
+
+    function buildStreakDots(streakCount) {
+      const max = 7;
+      const filled = Math.min(streakCount, max);
+      let html = '<div class="streak-dots">';
+      for (let i = 0; i < max; i++) {
+        html += `<div class="streak-dot${i < filled ? ' filled' : ''}"></div>`;
+      }
+      return html + '</div>';
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // HTML ESCAPE (prevents XSS when inserting user input into HTML)
+    // ──────────────────────────────────────────────────────────────
+
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // INIT — runs once the page loads
+    // ──────────────────────────────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // show today's date in the nav
+      document.getElementById('navDate').textContent = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+
+      // pick a random motivational quote
+      const randomQuote = MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)];
+      document.getElementById('heroQuote').textContent = `"${randomQuote}"`;
+
+      // allow pressing Enter to add a habit
+      document.getElementById('habitInput').addEventListener('keydown', e => {
+        if (e.key === 'Enter') addHabit();
+      });
+
+      renderAll();
+    });
+
+    // ──────────────────────────────────────────────────────────────
+    // RENDER EVERYTHING
+    // ──────────────────────────────────────────────────────────────
+
+    function renderAll() {
+      const data = loadData();
+      renderStats(data);
+      renderHabits(data);
+      renderWeekly(data);
+      renderReminders(data);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // STATS CARDS
+    // ──────────────────────────────────────────────────────────────
+
+    function renderStats(data) {
+      const habits = Object.values(data);
+      const today  = getTodayString();
+
+      const total  = habits.length;
+      const done   = habits.filter(h => h.dates.includes(today)).length;
+      const best   = habits.reduce((max, h) => Math.max(max, calculateStreak(h.dates)), 0);
+
+      const last7     = getLastSevenDays();
+      const possible  = habits.length * 7;
+      const weekDone  = habits.reduce((sum, h) => sum + last7.filter(d => h.dates.includes(d)).length, 0);
+      const weekPct   = possible > 0 ? Math.round(weekDone / possible * 100) : 0;
+
+      document.getElementById('statTotal').textContent  = total;
+      document.getElementById('statDone').textContent   = done;
+      document.getElementById('statStreak').textContent = best + '🔥';
+      document.getElementById('statWeek').textContent   = weekPct + '%';
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // HABITS TAB
+    // ──────────────────────────────────────────────────────────────
+
+    function renderHabits(data) {
+      const container = document.getElementById('habitList');
+      const today     = getTodayString();
+
+      // no habits yet — show empty state
+      if (!Object.keys(data).length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">🌱</div>
+            <p>No habits yet — add your first one above!</p>
+          </div>`;
+        return;
+      }
+
+      // group habits by category
+      const grouped = {};
+      for (const [name, info] of Object.entries(data)) {
+        const cat = info.cat || 'other';
+        if (!grouped[cat]) grouped[cat] = [];
+        grouped[cat].push([name, info]);
+      }
+
+      let html = '';
+
+      // render in a fixed category order
+      for (const cat of ['health', 'study', 'fitness', 'other']) {
+        if (!grouped[cat]) continue;
+
+        html += `<div class="category-heading">${CATEGORIES[cat].label}</div>`;
+
+        for (const [name, info] of grouped[cat]) {
+          const isCompleted = info.dates.includes(today);
+          const streak      = calculateStreak(info.dates);
+          const isOnFire    = streak >= 3;
+
+          html += `
+            <div class="habit-card cat-${cat}${isCompleted ? ' completed' : ''}">
+              <button
+                class="check-button${isCompleted ? ' checked' : ''}"
+                onclick="toggleHabit('${escapeHtml(name)}')"
+              ></button>
+
+              <div class="habit-info">
+                <div class="habit-name">${escapeHtml(name)}</div>
+                <div class="habit-meta">
+                  <span class="category-tag ${CATEGORIES[cat].tagClass}">${CATEGORIES[cat].label}</span>
+                  <span class="streak-info${isOnFire ? ' on-fire' : ''}">
+                    ${buildStreakDots(streak)}
+                    ${streak} day${streak !== 1 ? 's' : ''}
+                  </span>
+                </div>
+              </div>
+
+              <div class="habit-actions">
+                <button class="delete-btn" onclick="deleteHabit('${escapeHtml(name)}')">🗑</button>
+              </div>
+            </div>`;
+        }
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // WEEKLY TAB
+    // ──────────────────────────────────────────────────────────────
+
+    function renderWeekly(data) {
+      const last7    = getLastSevenDays();
+      const habits   = Object.entries(data);
+      const dayNames = last7.map(d =>
+        new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short' })
+      );
+
+      // header row
+      document.getElementById('weeklyHeader').innerHTML =
+        '<span>Habit</span>' + dayNames.map(name => `<span>${name}</span>`).join('');
+
+      // data rows
+      let rowHtml   = '';
+      let totalDone = 0;
+      const possible = habits.length * 7;
+
+      for (const [name, info] of habits) {
+        rowHtml += `<div class="weekly-row"><div class="weekly-habit-name">${escapeHtml(name)}</div>`;
+
+        for (const day of last7) {
+          const completed = info.dates.includes(day);
+          if (completed) totalDone++;
+          rowHtml += `<div class="day-dot ${completed ? 'done' : 'missed'}">${completed ? '✓' : '·'}</div>`;
+        }
+
+        rowHtml += '</div>';
+      }
+
+      if (!habits.length) {
+        rowHtml = `<div style="padding: 40px; text-align: center; color: var(--muted)">No habits yet!</div>`;
+      }
+
+      document.getElementById('weeklyRows').innerHTML = rowHtml;
+
+      // completion percentage
+      const pct = possible > 0 ? Math.round(totalDone / possible * 100) : 0;
+      document.getElementById('completionPct').textContent = pct + '%';
+
+      // animate the progress bar
+      setTimeout(() => {
+        document.getElementById('progressBar').style.width = pct + '%';
+      }, 100);
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // REMINDERS TAB
+    // ──────────────────────────────────────────────────────────────
+
+    function renderReminders(data) {
+      const today   = getTodayString();
+      const pending = Object.entries(data).filter(([, info]) => !info.dates.includes(today));
+      const done    = Object.entries(data).filter(([, info]) =>  info.dates.includes(today));
+
+      document.getElementById('pendingCount').textContent = pending.length;
+      document.getElementById('doneCount').textContent    = done.length;
+
+      // pending list
+      if (!pending.length) {
+        document.getElementById('pendingList').innerHTML = `
+          <div class="all-done-banner">
+            <div class="trophy">🎉</div>
+            <p>You've completed ALL habits today — legendary!</p>
+          </div>`;
+      } else {
+        document.getElementById('pendingList').innerHTML = pending.map(([name, info]) => {
+          const cat    = info.cat || 'other';
+          const streak = calculateStreak(info.dates);
+          return `
+            <div class="reminder-card pending">
+              <div class="reminder-icon ${CATEGORIES[cat].iconClass}">${CATEGORIES[cat].icon}</div>
+              <div>
+                <div class="reminder-name">${escapeHtml(name)}</div>
+                ${streak > 0 ? `<div class="reminder-warning">⚠️ Don't break your ${streak}-day streak!</div>` : ''}
+              </div>
+            </div>`;
+        }).join('');
+      }
+
+      // done list
+      if (!done.length) {
+        document.getElementById('doneList').innerHTML =
+          `<p style="color: var(--muted); font-size: 14px; padding: 4px">Nothing done yet — let's go!</p>`;
+      } else {
+        document.getElementById('doneList').innerHTML = done.map(([name]) => `
+          <div class="reminder-card" style="opacity: 0.55">
+            <div class="reminder-icon" style="background: rgba(0, 245, 160, 0.1)">✅</div>
+            <div class="reminder-name">${escapeHtml(name)}</div>
+          </div>`).join('');
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // USER ACTIONS
+    // ──────────────────────────────────────────────────────────────
+
+    function selectCategory(button) {
+      // deactivate all pills first
+      document.querySelectorAll('.category-pill').forEach(b => b.className = 'category-pill');
+
+      // activate the clicked one
+      selectedCategory = button.dataset.cat;
+      button.classList.add('active-' + selectedCategory);
+    }
+
+    function addHabit() {
+      const input = document.getElementById('habitInput');
+      const name  = input.value.trim();
+
+      if (!name) {
+        showToast('⚠️ Enter a habit name first!');
+        return;
+      }
+
+      const data = loadData();
+
+      if (data[name]) {
+        showToast('That habit already exists!');
+        return;
+      }
+
+      // save the new habit
+      data[name] = {
+        cat:     selectedCategory,
+        created: getTodayString(),
+        dates:   [],
+      };
+
+      saveData(data);
+      input.value = '';
+      renderAll();
+      showToast('✅ Habit added!');
+    }
+
+    function toggleHabit(name) {
+      const data  = loadData();
+      if (!data[name]) return;
+
+      const today = getTodayString();
+      const index = data[name].dates.indexOf(today);
+
+      if (index === -1) {
+        // mark as done
+        data[name].dates.push(today);
+        const streak = calculateStreak(data[name].dates);
+        showToast(`🔥 Done! ${streak}-day streak!`);
+      } else {
+        // unmark
+        data[name].dates.splice(index, 1);
+        showToast('Unmarked for today');
+      }
+
+      saveData(data);
+      renderAll();
+    }
+
+    function deleteHabit(name) {
+      if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+
+      const data = loadData();
+      delete data[name];
+      saveData(data);
+      renderAll();
+      showToast('🗑 Habit deleted');
+    }
+
+    function switchTab(tabName, clickedButton) {
+      // hide all panels and deactivate all tab buttons
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+      // show the selected panel and mark the button active
+      document.getElementById('panel-' + tabName).classList.add('active');
+      clickedButton.classList.add('active');
+
+      renderAll();
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    // TOAST NOTIFICATION
+    // ──────────────────────────────────────────────────────────────
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2600);
+    }
+  </script>
+</body>
+</html>
